@@ -1,0 +1,33 @@
+body {
+    font-family: 'Inter';
+    font-size: medium;
+    margin: 0;
+    align-items: center;
+    text-align: center;
+}
+
+.parent {
+    background-color: aquamarine;
+    width: 44rem;
+    display: inline-block;
+}
+
+.title {
+    background-color: teal;
+}
+.socials {
+    background-color: lavender;
+}
+
+.content {
+    background-color: orange;
+}
+.text {
+    background-color: tomato;
+}
+.submenus {
+    background-color: yellow;
+}
+img {
+    background-color: blue;
+}
