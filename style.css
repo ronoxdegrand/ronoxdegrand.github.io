@@ -5,13 +5,11 @@ body {
 }
 
 .parent {
-    background-color: aquamarine;
     width: 44rem;
     margin: 0 auto;
 }
 
 .title {
-    background-color: teal;
     padding-left: 1rem;
     display: flex;
     height: 4rem;
