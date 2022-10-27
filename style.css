@@ -55,14 +55,17 @@ img {
 }
 
 #ad {
-    grid-template-columns: 2fr 3fr;
+    grid-template-columns: 17rem 26rem;
+}
+#ad > a {
+    display: flex;
 }
 #ad > a > img {
-    max-width: 17rem;
+    max-width: 100%;
 }
 
 #blurb {
-    grid-template-columns: 3fr 2fr;
+    grid-template-columns: 26rem 17rem;
 }
 #blurb > img {
     max-width: 17rem;
