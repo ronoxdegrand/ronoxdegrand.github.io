@@ -37,14 +37,26 @@ p {
 }
 
 .content {
-    background-color: orange;
+    display: grid;
+    gap: 1rem;
 }
 .text {
-    background-color: tomato;
+    background-color: #EEF2F6;
+    padding: 1rem;
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
 }
 .submenus {
     background-color: yellow;
 }
 img {
-    background-color: blue;
+    border-radius: 1rem;
+}
+
+#ad {
+    grid-template-columns: 2fr 5fr;
+}
+#ad > img {
+    max-width: 17rem;
 }
