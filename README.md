@@ -1,2 +1,2 @@
 # ronoxdegrand.github.io
-Barebones webpage to what I do, and maybe I'll test out Vue or something
+Barebones webpage to what I do, just straight up raw CSS.
