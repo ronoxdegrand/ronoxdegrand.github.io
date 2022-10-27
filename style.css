@@ -55,8 +55,15 @@ img {
 }
 
 #ad {
-    grid-template-columns: 2fr 5fr;
+    grid-template-columns: 2fr 3fr;
 }
-#ad > img {
+#ad > a > img {
+    max-width: 17rem;
+}
+
+#blurb {
+    grid-template-columns: 3fr 2fr;
+}
+#blurb > img {
     max-width: 17rem;
 }
