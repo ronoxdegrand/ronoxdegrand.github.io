@@ -1,6 +1,9 @@
-body {
+:root {
     font-family: 'Inter';
     font-size: medium;
+}
+
+body {
     margin: 0;
 }
 
@@ -31,6 +34,16 @@ body {
     text-decoration: none;
     color: white;
 }
+#yt {
+    background-color: #C92121;
+}
+#li {
+    background-color: #0077B5;
+}
+#ig {
+    background-color: #E1306C;
+}
+
 p {
     height: fit-content;
     margin: 0;
@@ -48,7 +61,12 @@ p {
     align-items: center;
 }
 .submenus {
-    background-color: yellow;
+    background-color: #EEF2F6;
+    color: black;
+    padding: 1rem;
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
 }
 img {
     border-radius: 1rem;
@@ -68,5 +86,42 @@ img {
     grid-template-columns: 26rem 17rem;
 }
 #blurb > img {
-    max-width: 17rem;
+    max-width: 100%;
+}
+
+#projects {
+    grid-template-columns: 8rem 8rem 8rem 8rem 8rem;
+    height: 8rem;
+}
+
+#work {
+    grid-template-rows: 10rem 10rem;
+    grid-template-columns: 8rem 8rem 8rem 8rem 8rem;
+    grid-template-areas:
+    "a a b b c"
+    "d e e f f";
+}
+#a {
+    grid-area: a;
+}
+#b {
+    grid-area: b;
+
+    background-color: #1B1C1D;
+    color: white;
+}
+#c {
+    grid-area: c;
+}
+#d {
+    grid-area: d;
+}
+#e {
+    grid-area: e;
+}
+#f {
+    grid-area: f;
+
+    background-color: #1B1C1D;
+    color: white;
 }
