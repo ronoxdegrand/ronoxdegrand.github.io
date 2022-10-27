@@ -72,6 +72,14 @@ img {
     border-radius: 1rem;
 }
 
+.submenuCenter {
+    background-color: #EEF2F6;
+    color: black;
+    padding: 1rem;
+    border-radius: 1rem;
+    text-align: center;
+}
+
 #ad {
     grid-template-columns: 17rem 26rem;
 }
