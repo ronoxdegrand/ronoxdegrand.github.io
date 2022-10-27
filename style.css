@@ -2,21 +2,40 @@ body {
     font-family: 'Inter';
     font-size: medium;
     margin: 0;
-    align-items: center;
-    text-align: center;
 }
 
 .parent {
     background-color: aquamarine;
     width: 44rem;
-    display: inline-block;
+    margin: 0 auto;
 }
 
 .title {
     background-color: teal;
+    padding-left: 1rem;
+    display: flex;
+    height: 4rem;
+    align-items: center;
+
+}
+.rightside {
+    margin-left: auto;
+    display: flex;
+    gap: 1rem;
 }
 .socials {
-    background-color: lavender;
+    background-color: black;
+    height: 2rem;
+    width: 6rem;
+    text-align: center;
+    border-radius: 1rem;
+    line-height: 2rem;
+    text-decoration: none;
+    color: white;
+}
+p {
+    height: fit-content;
+    margin: 0;
 }
 
 .content {
