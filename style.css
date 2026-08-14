@@ -1,7 +1,8 @@
 :root {
 --background: #fafafa;
-    --surface: #ffffff;
+    --surface: #fafafa;
     --text: #111111;
+    --halftone-dot: #424242;
     --muted: #5f5f5f;
     --line: #e6e6e6;
     --max-width: 980px;
@@ -44,6 +45,9 @@ a[target="_blank"]::after {
     content: " ↗";
 }
 
+.header-contacts a[target="_blank"]::after {
+    content: none;
+}
 .inline-contact a {
     text-decoration: underline;
     text-underline-offset: 0.14em;
@@ -60,15 +64,56 @@ ul {
 .page {
     width: min(calc(100% - 2rem), var(--max-width));
     margin: 0 auto;
-padding: 1.5rem 0 4rem;
+    padding: 0 0 4rem;
 }
 
 .site-header {
+    position: sticky;
+        top: 0;
+        z-index: 20;
+        isolation: isolate;
+        overflow: hidden;
+        margin: 0 0 3.5rem;
+        background: var(--background);
+        border-bottom: 1px solid color-mix(in srgb, var(--line) 88%, transparent);
+    }
+    
+    .site-header::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        background: rgba(250, 250, 250, 0.5);
+    }
+    
+    .site-header-inner {
     display: flex;
-align-items: center;
-justify-content: space-between;
+    align-items: center;
+        justify-content: space-between;
     gap: 1rem;
-    padding: 0.25rem 0 3.5rem;
+    width: min(calc(100% - 2rem), var(--max-width));
+        margin: 0 auto;
+        padding: 1.25rem 1rem;
+    }
+    
+    .site-header-halftone {
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background: var(--background);
+    }
+    
+    .site-header-halftone-canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+    
+    .site-header-inner>* {
+        position: relative;
+        z-index: 1;
 }
 
 .brand,
@@ -81,13 +126,71 @@ justify-content: space-between;
 }
 .brand {
     font-weight: 700;
+    flex: 0 0 auto;
+        white-space: nowrap;
+    }
+    
+    .brand,
+    .site-nav a {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 0.34rem 0.68rem;
+        background: rgba(250, 250, 250, 0.9);
+            transition: background-color 160ms ease, opacity 160ms ease;
 }
 
 .site-nav {
     display: flex;
-flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 1.25rem;
-}
+    white-space: nowrap;
+    }
+    
+    .site-header-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 1.25rem;
+        min-width: 0;
+        margin-left: auto;
+    }
+    
+    .header-contacts {
+        display: flex;
+        align-items: center;
+        flex: 0 0 auto;
+        gap: 0.55rem;
+    }
+    
+    .header-contacts a {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 999px;
+        width: 2rem;
+        height: 2rem;
+        color: var(--muted);
+        background: rgba(250, 250, 250, 0.9);
+        transition: background-color 160ms ease, color 160ms ease;
+    }
+    
+    .header-contacts svg {
+        width: 1rem;
+        height: 1rem;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+    
+    .header-contacts a:hover,
+    .header-contacts a:focus-visible {
+        color: var(--text);
+        background: rgba(250, 250, 250, 0.95);
+    }
+
 .site-nav a,
 .supporting-text,
 .intro,
@@ -245,13 +348,17 @@ flex-wrap: wrap;
     line-height: 1.2;
 }
 
-.site-nav a {
-    transition: opacity 160ms ease;
+.brand:hover,
+.brand:focus-visible,
+.site-nav a:hover,
+.site-nav a:focus-visible {
+    background: rgba(250, 250, 250, 0.95);
+    opacity: 1;
 }
 
 .site-nav a:hover,
 .site-nav a:focus-visible {
-    opacity: 0.6;
+    color: var(--text);
 }
 
 @media (max-width: 760px) {
@@ -260,6 +367,8 @@ flex-wrap: wrap;
     }
 
   .site-header,
+        .site-header-inner,
+        .site-header-actions,
   .section-head,
   .entry,
   .compact-section,
@@ -269,16 +378,25 @@ flex-wrap: wrap;
       grid-template-columns: 1fr;
   }
 
-  .site-header {
+  .site-header-inner {
       align-items: flex-start;
     flex-direction: column;
-    padding-bottom: 2.5rem;
-    }
+        padding-top: 1rem;
+            padding-bottom: 1rem;
+            padding-inline: 0.625rem;
+        }
+        
+        .site-header {
+            margin-bottom: 2.5rem;
+        }
 
   .site-nav {
       display: none;
   }
 
+  .header-contacts {
+      display: none;
+  }
   .section {
       padding-bottom: 2.5rem;
       margin-bottom: 2.5rem;
