@@ -10,6 +10,16 @@ if (header && canvas) {
     const sourceContext = sourceCanvas.getContext('2d', {
         willReadFrequently: true,
     });
+    const isMobile = window.matchMedia('(max-width: 760px)').matches;
+    const socialBar = isMobile ? document.querySelector('.site-header-actions') : null;
+    const socialCanvas = socialBar ? document.createElement('canvas') : null;
+    const socialContext = socialCanvas?.getContext('2d');
+
+    if (socialBar && socialCanvas && socialContext) {
+        socialCanvas.className = 'mobile-social-halftone-canvas';
+        socialCanvas.setAttribute('aria-hidden', 'true');
+        socialBar.append(socialCanvas);
+    }
 
     if (renderContext && sourceContext) {
         let stylesheetText = '';
@@ -76,7 +86,7 @@ if (header && canvas) {
             image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
         });
 
-        const drawHalftone = (width, height) => {
+        const drawHalftone = (targetCanvas, targetContext, width, height) => {
             const imageData = sourceContext.getImageData(0, 0, width, height).data;
             const dpr = Math.min(window.devicePixelRatio || 1, 2);
             const surface = getVariable('--surface', '#ffffff');
@@ -85,15 +95,15 @@ if (header && canvas) {
             const rowStep = cellSize * 0.86;
             const radiusLimit = cellSize * 0.68;
 
-            canvas.width = Math.max(1, Math.round(width * dpr));
-            canvas.height = Math.max(1, Math.round(height * dpr));
-            canvas.style.width = `${width}px`;
-            canvas.style.height = `${height}px`;
+            targetCanvas.width = Math.max(1, Math.round(width * dpr));
+            targetCanvas.height = Math.max(1, Math.round(height * dpr));
+            targetCanvas.style.width = `${width}px`;
+            targetCanvas.style.height = `${height}px`;
 
-            renderContext.setTransform(dpr, 0, 0, dpr, 0, 0);
-            renderContext.fillStyle = surface;
-            renderContext.fillRect(0, 0, width, height);
-            renderContext.fillStyle = dotColor;
+            targetContext.setTransform(dpr, 0, 0, dpr, 0, 0);
+            targetContext.fillStyle = surface;
+            targetContext.fillRect(0, 0, width, height);
+            targetContext.fillStyle = dotColor;
 
             let rowIndex = 0;
 
@@ -145,19 +155,23 @@ if (header && canvas) {
                         continue;
                     }
 
-                    renderContext.beginPath();
-                    renderContext.arc(x, y, radius, 0, Math.PI * 2);
-                    renderContext.fill();
+                    targetContext.beginPath();
+                    targetContext.arc(x, y, radius, 0, Math.PI * 2);
+                    targetContext.fill();
                 }
 
                 rowIndex += 1;
             }
         };
 
-        const render = async () => {
-            const headerRect = header.getBoundingClientRect();
-            const width = Math.max(1, Math.round(headerRect.width));
-            const height = Math.max(1, Math.round(headerRect.height));
+        const renderSocialHalftone = async () => {
+            if (!socialBar || !socialCanvas || !socialContext) {
+                return;
+            }
+
+            const socialRect = socialCanvas.getBoundingClientRect();
+            const width = Math.max(1, Math.round(socialRect.width));
+            const height = Math.max(1, Math.round(socialRect.height));
 
             sourceCanvas.width = width;
             sourceCanvas.height = height;
@@ -167,15 +181,43 @@ if (header && canvas) {
                     buildSnapshotMarkup(),
                     width,
                     height,
-                    -headerRect.left,
-                    -window.scrollY - headerRect.top,
+                    -socialRect.left,
+                    -window.scrollY - socialRect.top,
                 );
 
                 sourceContext.clearRect(0, 0, width, height);
                 sourceContext.filter = 'blur(3.4px) contrast(1.16)';
                 sourceContext.drawImage(image, 0, 0, width, height);
                 sourceContext.filter = 'none';
-                drawHalftone(width, height);
+                drawHalftone(socialCanvas, socialContext, width, height);
+            } catch {
+                // Keep the opaque fallback background when a snapshot cannot be rendered.
+            }
+        };
+
+        const render = async () => {
+            const canvasRect = canvas.getBoundingClientRect();
+            const width = Math.max(1, Math.round(canvasRect.width));
+            const height = Math.max(1, Math.round(canvasRect.height));
+
+            sourceCanvas.width = width;
+            sourceCanvas.height = height;
+
+            try {
+                const image = await loadSvgImage(
+                    buildSnapshotMarkup(),
+                    width,
+                    height,
+                    -canvasRect.left,
+                    -window.scrollY - canvasRect.top,
+                );
+
+                sourceContext.clearRect(0, 0, width, height);
+                sourceContext.filter = 'blur(3.4px) contrast(1.16)';
+                sourceContext.drawImage(image, 0, 0, width, height);
+                sourceContext.filter = 'none';
+                drawHalftone(canvas, renderContext, width, height);
+                await renderSocialHalftone();
             } catch {
                 const dpr = Math.min(window.devicePixelRatio || 1, 2);
                 canvas.width = Math.max(1, Math.round(width * dpr));
@@ -284,10 +326,76 @@ if (header && canvas) {
                     : Math.max(0, targetTop - header.offsetHeight - 2);
 
                 history.pushState(null, '', targetId);
+                if (targetId === '#top') {
+                    link.classList.add('is-resting');
+                    link.querySelector('.header-link-halftone-canvas')?.classList.remove('is-visible');
+                }
+                link.blur();
                 animateScroll(from, scrollTarget);
             });
+            link.addEventListener('pointerenter', () => link.classList.remove('is-resting'));
         });
     }
+}
+
+const mobileSocialBar = document.querySelector('.site-header-actions');
+
+if (mobileSocialBar && window.matchMedia('(max-width: 760px)').matches) {
+    let previousScrollY = window.scrollY;
+    let isScrollUpdateQueued = false;
+    let idleTimer;
+    let downwardTimer;
+
+    const clearSocialBarTimers = () => {
+        window.clearTimeout(idleTimer);
+        window.clearTimeout(downwardTimer);
+        downwardTimer = undefined;
+    };
+
+    const hideSocialBar = () => {
+        clearSocialBarTimers();
+        mobileSocialBar.classList.add('is-hidden');
+    };
+
+    const showSocialBar = () => {
+        clearSocialBarTimers();
+        mobileSocialBar.classList.remove('is-hidden');
+        idleTimer = window.setTimeout(hideSocialBar, 2500);
+    };
+
+    window.addEventListener('scroll', () => {
+        if (isScrollUpdateQueued) {
+            return;
+        }
+
+        isScrollUpdateQueued = true;
+        requestAnimationFrame(() => {
+            const currentScrollY = window.scrollY;
+            const isScrollingDown = currentScrollY > previousScrollY + 4;
+            const isScrollingUp = currentScrollY < previousScrollY - 4;
+
+            if (isScrollingDown) {
+                if (!mobileSocialBar.classList.contains('is-hidden') && !downwardTimer) {
+                    window.clearTimeout(idleTimer);
+                    downwardTimer = window.setTimeout(hideSocialBar, 500);
+                }
+            } else if (isScrollingUp || currentScrollY < 12) {
+                showSocialBar();
+            }
+
+            previousScrollY = currentScrollY;
+            isScrollUpdateQueued = false;
+        });
+    }, { passive: true });
+
+    mobileSocialBar.addEventListener('pointerenter', () => {
+        clearSocialBarTimers();
+        mobileSocialBar.classList.remove('is-hidden');
+    });
+    mobileSocialBar.addEventListener('pointerleave', showSocialBar);
+    mobileSocialBar.addEventListener('focusin', clearSocialBarTimers);
+    mobileSocialBar.addEventListener('focusout', showSocialBar);
+    showSocialBar();
 }
 
 if (window.matchMedia('(pointer: fine)').matches) {
@@ -337,7 +445,7 @@ if (window.matchMedia('(pointer: fine)').matches) {
 
     const addLinkHalftone = (link, canvas, context, isFixed) => {
         const update = (event) => {
-            if (event.pointerType !== 'mouse') {
+            if (event.pointerType !== 'mouse' || link.classList.contains('is-resting')) {
                 return;
             }
 
