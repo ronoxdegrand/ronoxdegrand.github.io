@@ -164,34 +164,39 @@ if (header && canvas) {
             }
         };
 
-        const renderSocialHalftone = async () => {
-            if (!socialBar || !socialCanvas || !socialContext) {
-                return;
-            }
-
-            const socialRect = socialCanvas.getBoundingClientRect();
-            const width = Math.max(1, Math.round(socialRect.width));
-            const height = Math.max(1, Math.round(socialRect.height));
+        const renderSnapshotHalftone = async (targetRect, targetCanvas, targetContext) => {
+            const width = Math.max(1, Math.round(targetRect.width));
+            const height = Math.max(1, Math.round(targetRect.height));
 
             sourceCanvas.width = width;
             sourceCanvas.height = height;
 
-            try {
-                const image = await loadSvgImage(
-                    buildSnapshotMarkup(),
-                    width,
-                    height,
-                    -socialRect.left,
-                    -window.scrollY - socialRect.top,
-                );
+            const image = await loadSvgImage(
+                buildSnapshotMarkup(),
+                width,
+                height,
+                -targetRect.left,
+                -window.scrollY - targetRect.top,
+            );
 
-                sourceContext.clearRect(0, 0, width, height);
-                sourceContext.filter = 'blur(3.4px) contrast(1.16)';
-                sourceContext.drawImage(image, 0, 0, width, height);
-                sourceContext.filter = 'none';
-                drawHalftone(socialCanvas, socialContext, width, height);
-            } catch {
-                // Keep the opaque fallback background when a snapshot cannot be rendered.
+            sourceContext.clearRect(0, 0, width, height);
+            sourceContext.filter = 'blur(3.4px) contrast(1.16)';
+            sourceContext.drawImage(image, 0, 0, width, height);
+            sourceContext.filter = 'none';
+            drawHalftone(targetCanvas, targetContext, width, height);
+        };
+
+        const renderSocialHalftone = async () => {
+            if (socialBar && socialCanvas && socialContext) {
+                try {
+                    await renderSnapshotHalftone(
+                        socialCanvas.getBoundingClientRect(),
+                        socialCanvas,
+                        socialContext,
+                    );
+                } catch {
+                    // Keep the opaque fallback background when a snapshot cannot be rendered.
+                }
             }
         };
 
@@ -200,23 +205,8 @@ if (header && canvas) {
             const width = Math.max(1, Math.round(canvasRect.width));
             const height = Math.max(1, Math.round(canvasRect.height));
 
-            sourceCanvas.width = width;
-            sourceCanvas.height = height;
-
             try {
-                const image = await loadSvgImage(
-                    buildSnapshotMarkup(),
-                    width,
-                    height,
-                    -canvasRect.left,
-                    -window.scrollY - canvasRect.top,
-                );
-
-                sourceContext.clearRect(0, 0, width, height);
-                sourceContext.filter = 'blur(3.4px) contrast(1.16)';
-                sourceContext.drawImage(image, 0, 0, width, height);
-                sourceContext.filter = 'none';
-                drawHalftone(canvas, renderContext, width, height);
+                await renderSnapshotHalftone(canvasRect, canvas, renderContext);
                 await renderSocialHalftone();
             } catch {
                 const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -335,6 +325,40 @@ if (header && canvas) {
             });
             link.addEventListener('pointerenter', () => link.classList.remove('is-resting'));
         });
+
+        const sectionLinks = [...header.querySelectorAll('.site-nav a')];
+        const sectionTargets = sectionLinks.map((link) => ({
+            link,
+            target: document.querySelector(link.getAttribute('href')),
+        }));
+        let isSectionUpdateQueued = false;
+
+        const updateCurrentSection = () => {
+            const headerBottom = header.getBoundingClientRect().bottom;
+            let currentLink = null;
+
+            sectionTargets.forEach(({ link, target }) => {
+                if (target && target.getBoundingClientRect().top <= headerBottom + 4) {
+                    currentLink = link;
+                }
+            });
+
+            sectionLinks.forEach((link) => {
+                link.classList.toggle('is-current', link === currentLink);
+            });
+            isSectionUpdateQueued = false;
+        };
+
+        const queueSectionUpdate = () => {
+            if (!isSectionUpdateQueued) {
+                isSectionUpdateQueued = true;
+                requestAnimationFrame(updateCurrentSection);
+            }
+        };
+
+        window.addEventListener('scroll', queueSectionUpdate, { passive: true });
+        window.addEventListener('resize', queueSectionUpdate);
+        queueSectionUpdate();
     }
 }
 

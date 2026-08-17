@@ -388,7 +388,8 @@ flex-wrap: wrap;
 .brand:hover,
 .brand:focus-visible,
 .site-nav a:hover,
-.site-nav a:focus-visible {
+.site-nav a:focus-visible,
+.site-nav a.is-current {
     color: #ffffff;
     background-color: #111111;
     opacity: 1;
