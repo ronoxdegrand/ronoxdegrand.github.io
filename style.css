@@ -192,7 +192,6 @@ ul {
     }
 
 .site-nav a,
-.supporting-text,
 .intro,
 .entry-body p,
 .project p,
@@ -258,26 +257,7 @@ h3 {
     margin-bottom: 2.1rem;
 }
 
-.compact-section {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 2rem;
-    align-items: start;
-}
-.compact-section .section-head {
-    grid-template-columns: 1fr;
-    margin-bottom: 0;
-}
-
-.compact-section .section-label {
-    margin-bottom: 0.65rem;
-}
-
-.compact-content {
-    min-width: 0;
-}
-.two-column,
-.split-section {
+.two-column {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 2rem;
@@ -371,9 +351,7 @@ flex-wrap: wrap;
         .site-header-actions,
   .section-head,
   .entry,
-  .compact-section,
   .two-column,
-  .split-section,
   .project-grid {
       grid-template-columns: 1fr;
   }
