@@ -1,5 +1,5 @@
 :root {
---background: #fafafa;
+    --background: #fafafa;
     --surface: #fafafa;
     --text: #111111;
     --halftone-dot: #424242;
@@ -39,6 +39,52 @@ background: var(--background);
 a {
     color: inherit;
     text-decoration: none;
+}
+
+a:hover {
+    cursor: none;
+}
+
+a:hover,
+a:focus-visible {
+    color: #ffffff;
+    background-color: #111111;
+}
+
+.link-halftone-canvas,
+.header-link-halftone-canvas {
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 120ms ease;
+}
+
+.link-halftone-canvas.is-visible,
+.header-link-halftone-canvas.is-visible {
+    opacity: 1;
+}
+
+.link-halftone-canvas {
+    position: fixed;
+    z-index: 13;
+    border-radius: 999px;
+}
+
+.header-link-halftone-canvas {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+}
+
+main a:hover,
+main a:focus-visible {
+    position: relative;
+    z-index: 12;
+    border-radius: 999px;
+    margin: -0.34rem -0.68rem;
+    padding: 0.34rem 0.68rem;
 }
 
 a[target="_blank"]::after {
@@ -130,14 +176,20 @@ ul {
         white-space: nowrap;
     }
     
-    .brand,
-    .site-nav a {
-        display: inline-flex;
+.brand,
+.site-nav a {
+    display: inline-flex;
         align-items: center;
         border-radius: 999px;
         padding: 0.34rem 0.68rem;
         background: rgba(250, 250, 250, 0.9);
             transition: background-color 160ms ease, opacity 160ms ease;
+}
+
+.site-header a {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
 }
 
 .site-nav {
@@ -187,8 +239,8 @@ ul {
     
     .header-contacts a:hover,
     .header-contacts a:focus-visible {
-        color: var(--text);
-        background: rgba(250, 250, 250, 0.95);
+        color: #ffffff;
+        background-color: #111111;
     }
 
 .site-nav a,
@@ -230,6 +282,11 @@ h3 {
 .project h3 a {
     text-decoration: underline;
     text-underline-offset: 0.14em;
+}
+
+body a:hover,
+body a:focus-visible {
+    text-decoration: none;
 }
 .intro {
     max-width: 42rem;
@@ -332,13 +389,9 @@ flex-wrap: wrap;
 .brand:focus-visible,
 .site-nav a:hover,
 .site-nav a:focus-visible {
-    background: rgba(250, 250, 250, 0.95);
+    color: #ffffff;
+    background-color: #111111;
     opacity: 1;
-}
-
-.site-nav a:hover,
-.site-nav a:focus-visible {
-    color: var(--text);
 }
 
 @media (max-width: 760px) {

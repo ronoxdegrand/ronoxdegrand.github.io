@@ -1,8 +1,7 @@
 const header = document.querySelector('.site-header');
-const page = document.querySelector('.page');
 const canvas = document.querySelector('.site-header-halftone-canvas');
 
-if (header && page && canvas) {
+if (header && canvas) {
     const renderContext = canvas.getContext('2d', {
         alpha: false,
         willReadFrequently: true,
@@ -291,3 +290,95 @@ if (header && page && canvas) {
     }
 }
 
+if (window.matchMedia('(pointer: fine)').matches) {
+    const drawLinkHalftone = (canvas, context, link, event, isFixed) => {
+        const linkBounds = link.getBoundingClientRect();
+        const width = Math.max(1, Math.round(linkBounds.width));
+        const height = Math.max(1, Math.round(linkBounds.height));
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const mouseX = event.clientX - linkBounds.left;
+        const mouseY = event.clientY - linkBounds.top;
+        const cellSize = 6.2;
+        const rowStep = cellSize * 0.86;
+        const influenceRadius = 72;
+
+        canvas.width = Math.round(width * dpr);
+        canvas.height = Math.round(height * dpr);
+
+        if (isFixed) {
+            canvas.style.width = `${width}px`;
+            canvas.style.height = `${height}px`;
+            canvas.style.left = `${linkBounds.left}px`;
+            canvas.style.top = `${linkBounds.top}px`;
+        }
+
+        context.setTransform(dpr, 0, 0, dpr, 0, 0);
+        context.clearRect(0, 0, width, height);
+        context.fillStyle = 'rgba(255, 255, 255, 0.45)';
+
+        let rowIndex = 0;
+
+        for (let y = rowStep / 2; y < height; y += rowStep) {
+            const xOffset = rowIndex % 2 === 0 ? cellSize / 2 : cellSize;
+
+            for (let x = xOffset; x < width; x += cellSize) {
+                const distance = Math.hypot(x - mouseX, y - mouseY);
+                const proximity = Math.max(0, 1 - (distance / influenceRadius));
+                const radius = 0.35 + (Math.pow(proximity, 1.7) * 2.4);
+
+                context.beginPath();
+                context.arc(x, y, radius, 0, Math.PI * 2);
+                context.fill();
+            }
+
+            rowIndex += 1;
+        }
+    };
+
+    const addLinkHalftone = (link, canvas, context, isFixed) => {
+        const update = (event) => {
+            if (event.pointerType !== 'mouse') {
+                return;
+            }
+
+            drawLinkHalftone(canvas, context, link, event, isFixed);
+            canvas.classList.add('is-visible');
+        };
+
+        link.addEventListener('pointerenter', update);
+        link.addEventListener('pointermove', update);
+        link.addEventListener('pointerleave', () => canvas.classList.remove('is-visible'));
+    };
+
+    const createHalftoneCanvas = (className, parent) => {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+
+        if (!context) {
+            return null;
+        }
+
+        canvas.className = className;
+        canvas.setAttribute('aria-hidden', 'true');
+        parent.append(canvas);
+        return { canvas, context };
+    };
+
+    const bodyLinkHalftone = createHalftoneCanvas('link-halftone-canvas', document.body);
+
+    if (bodyLinkHalftone) {
+        document.querySelectorAll('main a').forEach((link) => {
+            addLinkHalftone(link, bodyLinkHalftone.canvas, bodyLinkHalftone.context, true);
+        });
+    }
+
+    document.querySelectorAll('.site-header a').forEach((link) => {
+        const headerLinkHalftone = createHalftoneCanvas('header-link-halftone-canvas', link);
+
+        if (!headerLinkHalftone) {
+            return;
+        }
+
+        addLinkHalftone(link, headerLinkHalftone.canvas, headerLinkHalftone.context, false);
+    });
+}
