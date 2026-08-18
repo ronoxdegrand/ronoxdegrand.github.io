@@ -26,6 +26,58 @@ background: var(--background);
     line-height: 1.6;
 }
 
+@media (pointer: fine) {
+    html {
+        scrollbar-width: none;
+    }
+
+    ::-webkit-scrollbar {
+        display: none;
+    }
+
+    .custom-scrollbar {
+        position: fixed;
+        top: 0.5rem;
+        right: 0.2rem;
+        bottom: 0.5rem;
+        z-index: 40;
+        width: 0.6rem;
+        opacity: 0;
+        transition: width 160ms ease, opacity 160ms ease;
+    }
+
+    .custom-scrollbar.is-visible {
+        opacity: 1;
+    }
+
+    .custom-scrollbar.is-expanded {
+        width: 1rem;
+    }
+
+    .custom-scrollbar-thumb {
+        position: absolute;
+        right: 0;
+        width: 100%;
+        min-height: 2rem;
+        border: 0.2rem solid var(--background);
+        border-radius: 999px;
+        background: var(--text);
+        cursor: grab;
+        touch-action: none;
+    }
+
+    .custom-scrollbar-thumb:hover {
+        cursor: none;
+    }
+
+    .custom-scrollbar-halftone {
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        pointer-events: none;
+    }
+}
+
 ::selection {
     background: #111111;
     color: #ffffff;

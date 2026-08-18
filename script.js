@@ -1,6 +1,143 @@
 const header = document.querySelector('.site-header');
 const canvas = document.querySelector('.site-header-halftone-canvas');
 
+const drawPointerHalftone = (canvas, context, width, height, pointerX, pointerY) => {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const cellSize = 6.2;
+    const rowStep = cellSize * 0.86;
+    const influenceRadius = 72;
+
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+    context.setTransform(dpr, 0, 0, dpr, 0, 0);
+    context.clearRect(0, 0, width, height);
+    context.fillStyle = 'rgba(255, 255, 255, 0.45)';
+
+    let rowIndex = 0;
+
+    for (let y = rowStep / 2; y < height; y += rowStep) {
+        const xOffset = rowIndex % 2 === 0 ? cellSize / 2 : cellSize;
+
+        for (let x = xOffset; x < width; x += cellSize) {
+            const distance = Math.hypot(x - pointerX, y - pointerY);
+            const proximity = Math.max(0, 1 - (distance / influenceRadius));
+            const radius = 0.35 + (Math.pow(proximity, 1.7) * 2.4);
+
+            context.beginPath();
+            context.arc(x, y, radius, 0, Math.PI * 2);
+            context.fill();
+        }
+
+        rowIndex += 1;
+    }
+};
+
+if (window.matchMedia('(pointer: fine)').matches) {
+    const root = document.documentElement;
+    const scrollbar = document.createElement('div');
+    const scrollbarThumb = document.createElement('div');
+    const scrollbarHalftone = document.createElement('canvas');
+    const scrollbarHalftoneContext = scrollbarHalftone.getContext('2d');
+    let scrollbarHideTimer;
+
+    scrollbar.className = 'custom-scrollbar';
+    scrollbarThumb.className = 'custom-scrollbar-thumb';
+    scrollbarHalftone.className = 'custom-scrollbar-halftone';
+    scrollbarHalftone.setAttribute('aria-hidden', 'true');
+    scrollbarThumb.append(scrollbarHalftone);
+    scrollbar.append(scrollbarThumb);
+    document.body.append(scrollbar);
+
+    const updateScrollbar = () => {
+        const viewportHeight = window.innerHeight;
+        const documentHeight = root.scrollHeight;
+        const trackHeight = scrollbar.clientHeight;
+        const maxScroll = documentHeight - viewportHeight;
+
+        if ((scrollbar.hidden = maxScroll <= 0)) {
+            return;
+        }
+
+        const thumbHeight = Math.max(32, (viewportHeight / documentHeight) * trackHeight);
+        const thumbTop = (window.scrollY / maxScroll) * (trackHeight - thumbHeight);
+
+        scrollbarThumb.style.height = `${thumbHeight}px`;
+        scrollbarThumb.style.transform = `translateY(${thumbTop}px)`;
+    };
+
+    const revealScrollbar = () => {
+        updateScrollbar();
+        scrollbar.classList.add('is-visible');
+        window.clearTimeout(scrollbarHideTimer);
+        scrollbarHideTimer = window.setTimeout(() => scrollbar.classList.remove('is-visible'), 1500);
+    };
+
+    window.addEventListener('scroll', revealScrollbar, { passive: true });
+    window.addEventListener('resize', updateScrollbar);
+    scrollbar.addEventListener('pointerenter', () => {
+        scrollbar.classList.add('is-expanded');
+        revealScrollbar();
+    });
+    scrollbar.addEventListener('pointerleave', () => scrollbar.classList.remove('is-expanded'));
+    const updateScrollbarHalftone = (event) => {
+        if (!scrollbarHalftoneContext) {
+            return;
+        }
+
+        const thumbBounds = scrollbarThumb.getBoundingClientRect();
+        drawPointerHalftone(
+            scrollbarHalftone,
+            scrollbarHalftoneContext,
+            thumbBounds.width,
+            thumbBounds.height,
+            event.clientX - thumbBounds.left,
+            event.clientY - thumbBounds.top,
+        );
+    };
+
+    scrollbarThumb.addEventListener('pointerenter', updateScrollbarHalftone);
+    scrollbarThumb.addEventListener('pointermove', updateScrollbarHalftone);
+    scrollbarThumb.addEventListener('pointerleave', () => {
+        scrollbarHalftone.width = 0;
+        scrollbarHalftone.height = 0;
+    });
+    scrollbarThumb.addEventListener('pointerdown', (event) => {
+        const trackBounds = scrollbar.getBoundingClientRect();
+        const thumbBounds = scrollbarThumb.getBoundingClientRect();
+        const pointerOffset = event.clientY - thumbBounds.top;
+        const maxScroll = root.scrollHeight - window.innerHeight;
+        const maxThumbTop = trackBounds.height - thumbBounds.height;
+
+        if (maxScroll <= 0 || maxThumbTop <= 0) {
+            return;
+        }
+
+        event.preventDefault();
+        scrollbarThumb.setPointerCapture(event.pointerId);
+        const moveThumb = (moveEvent) => {
+            const thumbTop = Math.min(
+                maxThumbTop,
+                Math.max(0, moveEvent.clientY - trackBounds.top - pointerOffset),
+            );
+
+            window.scrollTo({
+                top: (thumbTop / maxThumbTop) * maxScroll,
+                behavior: 'instant',
+            });
+        };
+        const releaseThumb = () => {
+            scrollbarThumb.removeEventListener('pointermove', moveThumb);
+            scrollbarThumb.removeEventListener('pointerup', releaseThumb);
+        };
+
+        scrollbarThumb.addEventListener('pointermove', moveThumb);
+        scrollbarThumb.addEventListener('pointerup', releaseThumb);
+    });
+    revealScrollbar();
+}
+
 if (header && canvas) {
     const renderContext = canvas.getContext('2d', {
         alpha: false,
@@ -427,44 +564,20 @@ if (window.matchMedia('(pointer: fine)').matches) {
         const linkBounds = link.getBoundingClientRect();
         const width = Math.max(1, Math.round(linkBounds.width));
         const height = Math.max(1, Math.round(linkBounds.height));
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        const mouseX = event.clientX - linkBounds.left;
-        const mouseY = event.clientY - linkBounds.top;
-        const cellSize = 6.2;
-        const rowStep = cellSize * 0.86;
-        const influenceRadius = 72;
-
-        canvas.width = Math.round(width * dpr);
-        canvas.height = Math.round(height * dpr);
 
         if (isFixed) {
-            canvas.style.width = `${width}px`;
-            canvas.style.height = `${height}px`;
             canvas.style.left = `${linkBounds.left}px`;
             canvas.style.top = `${linkBounds.top}px`;
         }
 
-        context.setTransform(dpr, 0, 0, dpr, 0, 0);
-        context.clearRect(0, 0, width, height);
-        context.fillStyle = 'rgba(255, 255, 255, 0.45)';
-
-        let rowIndex = 0;
-
-        for (let y = rowStep / 2; y < height; y += rowStep) {
-            const xOffset = rowIndex % 2 === 0 ? cellSize / 2 : cellSize;
-
-            for (let x = xOffset; x < width; x += cellSize) {
-                const distance = Math.hypot(x - mouseX, y - mouseY);
-                const proximity = Math.max(0, 1 - (distance / influenceRadius));
-                const radius = 0.35 + (Math.pow(proximity, 1.7) * 2.4);
-
-                context.beginPath();
-                context.arc(x, y, radius, 0, Math.PI * 2);
-                context.fill();
-            }
-
-            rowIndex += 1;
-        }
+        drawPointerHalftone(
+            canvas,
+            context,
+            width,
+            height,
+            event.clientX - linkBounds.left,
+            event.clientY - linkBounds.top,
+        );
     };
 
     const addLinkHalftone = (link, canvas, context, isFixed) => {
