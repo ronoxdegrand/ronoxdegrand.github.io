@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180" viewBox="0 0 180 180">
+    <filter id="grain">
+        <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" seed="1">
+            <animate attributeName="seed" values="1;2;3;4;5;6;7;8;9;10;11;12;13;14;15" dur="1s" calcMode="discrete" repeatCount="indefinite" />
+        </feTurbulence>
+        <feColorMatrix type="saturate" values="0" />
+    </filter>
+    <rect width="180" height="180" filter="url(#grain)" />
+</svg>
