@@ -1,2 +1,3 @@
 # ronoxdegrand.github.io
-Barebones webpage to what I do, just straight up raw CSS.
+
+A little site about what I do and what I've worked on. Plain HTML, CSS, and JS, with grain and interactive halftones.
