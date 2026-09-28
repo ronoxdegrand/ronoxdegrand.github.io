@@ -282,7 +282,7 @@ if (header && canvas) {
             image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
         });
 
-        const drawHalftone = (targetCanvas, targetContext, width, height, minimumRadius = 0) => {
+        const drawHalftone = (targetCanvas, targetContext, width, height) => {
             const imageData = sourceContext.getImageData(0, 0, width, height).data;
             const dotColor = getVariable('--halftone-dot', '#ffffff');
             const cellSize = window.innerWidth <= 760 ? 5.4 : 6.2;
@@ -335,10 +335,7 @@ if (header && canvas) {
                     const coverageSignal = Math.sqrt(Math.min(0.42, coverage) / 0.42) * 0.7;
                     const fillSignal = Math.min(0.54, Math.max(0, luminance - 0.65) * 0.95);
                     const clampedSignal = Math.min(0.82, Math.max(strokeSignal, coverageSignal, fillSignal) - 0.015);
-                    const radius = Math.max(
-                        minimumRadius,
-                        radiusLimit * Math.pow(Math.max(0, clampedSignal), 1.05),
-                    );
+                    const radius = radiusLimit * Math.pow(Math.max(0, clampedSignal), 1.05);
 
                     if (radius <= 0.1) {
                         continue;
@@ -353,7 +350,7 @@ if (header && canvas) {
             }
         };
 
-        const renderSnapshotHalftone = async (targetRect, targetCanvas, targetContext, minimumRadius = 0) => {
+        const renderSnapshotHalftone = async (targetRect, targetCanvas, targetContext) => {
             const width = Math.max(1, Math.round(targetRect.width));
             const height = Math.max(1, Math.round(targetRect.height));
 
@@ -372,7 +369,7 @@ if (header && canvas) {
             sourceContext.filter = 'blur(3.4px) contrast(1.16)';
             sourceContext.drawImage(image, 0, 0, width, height);
             sourceContext.filter = 'none';
-            drawHalftone(targetCanvas, targetContext, width, height, minimumRadius);
+            drawHalftone(targetCanvas, targetContext, width, height);
         };
 
         const renderSocialHalftone = async () => {
@@ -380,19 +377,15 @@ if (header && canvas) {
                 const socialRect = socialCanvas.getBoundingClientRect();
                 const width = Math.max(1, Math.round(socialRect.width));
                 const height = Math.max(1, Math.round(socialRect.height));
-                const minimumRadius = 1.05;
 
                 try {
                     await renderSnapshotHalftone(
                         socialRect,
                         socialCanvas,
                         socialContext,
-                        minimumRadius,
                     );
                 } catch {
-                    sourceCanvas.width = width;
-                    sourceCanvas.height = height;
-                    drawHalftone(socialCanvas, socialContext, width, height, minimumRadius);
+                    prepareHalftoneCanvas(socialCanvas, socialContext, width, height);
                 }
             }
         };
@@ -411,7 +404,15 @@ if (header && canvas) {
             }
         };
 
+        const syncSocialSurface = () => {
+            if (!socialBar) return;
+            const bounds = socialBar.getBoundingClientRect();
+            socialBar.style.setProperty('--sky-offset-x', `${-bounds.left}px`);
+            socialBar.style.setProperty('--sky-offset-y', `${-bounds.top}px`);
+        };
+
         const queueRender = () => {
+            syncSocialSurface();
             if (isRendering) {
                 pendingRender = true;
                 return;
@@ -459,6 +460,8 @@ if (header && canvas) {
 
         window.addEventListener('scroll', queueRender, { passive: true });
         window.addEventListener('resize', queueRender);
+        window.visualViewport?.addEventListener('resize', queueRender);
+        socialBar?.addEventListener('transitionend', queueRender);
         window.addEventListener('hashchange', queueRenderBurst);
         window.addEventListener('load', queueRender);
 
